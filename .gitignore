@@ -54,6 +54,18 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
+# Json file
+*.json
+
+# Database file
+*.db
+
+# Database Setting file
+*_db.js
+
+# Test file
+test_*.js
+
 # dotenv environment variables file
 .env
 
