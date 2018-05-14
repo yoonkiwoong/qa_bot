@@ -7,6 +7,7 @@ var db = new sqlite3.Database("./sandboxversion.db");
 
 var cmsUrl = "http://sandbox-cms.kakaopage.com/info";
 var apiUrl = "https://sandbox-api2-page.kakao.com/api/info";
+var exidUrl = "https://sandbox-charlie.kakaopage.com/exid/api/server-info/";
 
 request(cmsUrl, function(err, res, body) {
   if (!err) {
@@ -14,10 +15,8 @@ request(cmsUrl, function(err, res, body) {
     var cmsBranch = cmsJson.git.branch;
     if (cmsBranch === "develop") {
       var cmsDevelop = cmsBranch;
-      console.log("CMS : " + apiDevelop);
     } else if (cmsBranch === "master") {
       var cmsMaster = cmsBranch;
-      console.log("CMS : " + cmsMaster);
     } else {
       var cmsBranchSplit = cmsBranch.split("/");
       var cmsSandboxVersion = cmsBranchSplit[2] + "_" + cmsBranchSplit[3];
@@ -43,10 +42,8 @@ request(apiUrl, function(err, res, body) {
     var apiBranch = apiJson.git.branch;
     if (apiBranch === "develop") {
       var apiDevelop = apiBranch;
-      console.log("API : " + apiDevelop);
     } else if (apiBranch === "master") {
       var apiMaster = apiBranch;
-      console.log("API : " + apiMaster);
     } else {
       var apiBranchSplit = apiBranch.split("/");
       var apiSandboxVersion = apiBranchSplit[2] + "_" + apiBranchSplit[3];
@@ -74,74 +71,88 @@ bot.on("start", function() {
 
 bot.on("message", function(data) {
   if (data.type === "message") {
-    console.log(data);
+    // console.log(data);
     var botId = data.bot_id;
 
     //jenkins_bot : B3SS13WEL
     //exid_bot : B44CU1B7B
     //qa_bot : B7H8GG57X
     if (botId === "B3SS13WEL" && data.attachments) {
+      attachmentsInformation = data.attachments;
+      // console.log(attachmentsInformation);
+      var valueInformation = data.attachments[0].fallback;
+      // console.log(valueInformation);
       var valueInformation = data.attachments[0].fields[0].value;
-
+      console.log(valueInformation + "\n");
       if (
         valueInformation.includes("SUCCESSFUL") &&
         valueInformation.includes("nicolas-build-deploy-test-kranes")
       ) {
+        console.log("NICOLAS SERVER DEPLOY SUCCESSFUL");
         var valueInformation = valueInformation.toUpperCase();
         var splitInformation = valueInformation.split("\n");
-        var deployServer = splitInformation[3].slice(12, 19);
-        var deployModule = splitInformation[1].slice(8);
-        var serverVersion = splitInformation[2].slice(10);
+        var deployNicolasServer = splitInformation[3].slice(12, 19);
+        console.log(deployNicolasServer);
+        var deployNicolasModule = splitInformation[1].slice(8, 11);
+        console.log(deployNicolasModule);
 
-        if (deployServer == "SANDBOX" && deployModule == "CMS") {
+        if (deployNicolasServer == "SANDBOX" && deployNicolasModule == "CMS") {
           request(cmsUrl, function(err, res, body) {
             if (!err) {
               var cmsJson = JSON.parse(body);
               var cmsBranch = cmsJson.git.branch;
               if (cmsBranch === "develop") {
                 var cmsDevelop = cmsBranch;
-                console.log("CMS : " + apiDevelop);
               } else if (cmsBranch === "master") {
                 var cmsMaster = cmsBranch;
-                console.log("CMS : " + cmsMaster);
               } else {
                 var cmsBranchSplit = cmsBranch.split("/");
                 var cmsSandboxVersion =
                   cmsBranchSplit[2] + "_" + cmsBranchSplit[3];
-                console.log("CMS : " + cmsSandboxVersion);
+                console.log("CMS : " + cmsSandboxVersion + "\n");
               }
             }
             db.run(
               "UPDATE sandboxserver SET version = ? WHERE id = ?",
-              [apiSandboxVersion, 1],
+              [cmsSandboxVersion, 1],
               function() {
                 bot.postMessageToChannel(
                   "qa_bot_test",
                   "배포완료 *" +
-                    deployModule +
+                    deployNicolasModule +
                     "* : `" +
-                    apiSandboxVersion +
+                    cmsSandboxVersion +
+                    "`"
+                );
+                bot.postMessageToUser(
+                  "jina",
+                  "qa_bot_test",
+                  "배포완료 *" +
+                    deployNicolasModule +
+                    "* : `" +
+                    cmsSandboxVersion +
                     "`"
                 );
               }
             );
           });
-        } else if (deployServer == "SANDBOX" && deployModule == "API") {
+        } else if (
+          deployNicolasServer == "SANDBOX" &&
+          deployNicolasModule == "API"
+        ) {
           request(apiUrl, function(err, res, body) {
             if (!err) {
               var apiJson = JSON.parse(body);
               var apiBranch = apiJson.git.branch;
               if (apiBranch === "develop") {
                 var apiDevelop = apiBranch;
-                console.log("API : " + apiDevelop);
               } else if (apiBranch === "master") {
                 var apiMaster = apiBranch;
-                console.log("API : " + apiMaster);
               } else {
                 var apiBranchSplit = apiBranch.split("/");
                 var apiSandboxVersion =
                   apiBranchSplit[2] + "_" + apiBranchSplit[3];
-                console.log("API : " + apiSandboxVersion);
+                console.log("API : " + apiSandboxVersion + "\n");
               }
             }
             db.run(
@@ -151,7 +162,16 @@ bot.on("message", function(data) {
                 bot.postMessageToChannel(
                   "qa_bot_test",
                   "배포완료 *" +
-                    deployModule +
+                    deployNicolasModule +
+                    "* : `" +
+                    apiSandboxVersion +
+                    "`"
+                );
+                bot.postMessageToUser(
+                  "jina",
+                  "qa_bot_test",
+                  "배포완료 *" +
+                    deployNicolasModule +
                     "* : `" +
                     apiSandboxVersion +
                     "`"
@@ -164,24 +184,28 @@ bot.on("message", function(data) {
         valueInformation.includes("SUCCESSFUL") &&
         valueInformation.includes("slide_test_krane")
       ) {
+        console.log("SLIDE SERVER DEPLOY SUCCESSFUL");
         var valueInformation = valueInformation.toUpperCase();
         var splitInformation = valueInformation.split("\n");
-        var deployServer = splitInformation[2].slice(10, 16);
-        var slideBranchSplit = splitInformation[2].split("/");
+        var deploySlideServer = splitInformation[2].slice(10, 17);
+        console.log(deploySlideServer);
+        var slideBranchSplit = splitInformation[1].split("/");
         var slideSandboxVersion =
           slideBranchSplit[1] + "_" + slideBranchSplit[2];
-        console.log("SLIDE : " + slideSandboxVersion);
-      }
-      db.run(
-        "UPDATE sandboxserver SET version = ? WHERE id = ?",
-        [slideSandboxVersion, 4],
-        function() {
-          bot.postMessageToChannel(
-            "qa_bot_test",
-            "배포완료 *" + deployModule + "* : `" + apiSandboxVersion + "`"
+        console.log(slideSandboxVersion + "\n");
+        if (deploySlideServer == "SANDBOX") {
+          db.run(
+            "UPDATE sandboxserver SET version = ? WHERE id = ?",
+            [slideSandboxVersion, 4],
+            function() {
+              bot.postMessageToChannel(
+                "qa_bot_test",
+                "배포완료 *SLIDE* : `" + slideSandboxVersion + "`"
+              );
+            }
           );
         }
-      );
+      }
     }
 
     var checkServerVersion = data.text;
@@ -196,6 +220,7 @@ bot.on("message", function(data) {
         },
         function() {
           bot.postMessageToChannel("qa_bot_test", sandboxVersionList);
+          bot.postMessageToUser("jina", sandboxVersionList);
         }
       );
     }
