@@ -6,144 +6,65 @@ var sqlite3 = require("sqlite3").verbose();
 
 var db = new sqlite3.Database("./sandboxversion.db");
 
-function cmsSandboxAdd() {
-  request.get(urls.cms, function (err, res, body) {
-    if (!err) {
+function sandboxVersionAdd(sandboxModule, id) {
+  request.get(sandboxModule, function (err, res, body) {
+    if (err) {
+      console.log(err + "\n")
+    } else {
       if (res.statusCode == 200) {
-        var cmsJson = JSON.parse(body);
-        var cmsBranch = cmsJson.git.branch;
-        if (cmsBranch === "develop") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Develop",
-            1
-          ]);
-        } else if (cmsBranch === "master") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Master",
-            1
-          ]);
-        } else {
-          var cmsBranchSplit = cmsBranch.split("/");
-          var cmsSandboxVersion = cmsBranchSplit[2] + "_" + cmsBranchSplit[3];
-
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            cmsSandboxVersion,
-            1
-          ]);
+        var json = JSON.parse(body);
+        if (sandboxModule === urls.cms || sandboxModule === urls.api) {
+          var branch = json.git.branch;
+          if (branch.includes("QA")) {
+            var sandboxVersion = branchSplit[2] + "_" + branchSplit[3];
+            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
+              sandboxVersion,
+              id
+            ]);
+          } else {
+            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
+              branch,
+              id
+            ]);
+          }
+        } else if (sandboxModule === urls.exidOptions) {
+          var branch = json.data.git_branch;
+          if (branch.includes("QA")) {
+            var sandboxVersion = branchSplit[1] + "_" + branchSplit[2];
+            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
+              sandboxVersion,
+              id
+            ]);
+          } else {
+            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
+              branch,
+              id
+            ]);
+          }
         }
       } else {
-        console.log("CMS Response Code : " + res.statusCode + "\n");
+        console.log("Response Code : " + res.statusCode + "\n");
       }
     }
   });
 }
 
-function exidSandboxAdd() {
-  request.get(exidOptions, function (err, res, body) {
-    if (!err) {
-      if (res.statusCode == 200) {
-        var exidJson = JSON.parse(body);
-        var exidBranch = exidJson.data.git_branch;
-        if (exidBranch === "develop") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Develop",
-            1
-          ]);
-        } else if (exidBranch === "master") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Master",
-            1
-          ]);
-        } else {
-          var exidBranchSplit = exidBranch.split("/");
-          var exidSandboxVersion = exidBranchSplit[1] + "_" + exidBranchSplit[2];
-
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            exidSandboxVersion,
-            2
-          ]);
-        }
-      } else {
-        console.log("EXID Response Code : " + res.statusCode + "\n");
-      }
-    }
-  });
-}
-
-function apiSandboxAdd() {
-  request.get(urls.api, function (err, res, body) {
-    if (!err) {
-      if (res.statusCode == 200) {
-        console.log("API SANDBOX VERSION ADDED")
-        var apiJson = JSON.parse(body);
-        var apiBranch = apiJson.git.branch;
-        if (apiBranch === "develop") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Develop",
-            3
-          ]);
-        } else if (apiBranch === "master") {
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            "Master",
-            3
-          ]);
-        } else {
-          var apiBranchSplit = apiBranch.split("/");
-          var apiSandboxVersion = apiBranchSplit[2] + "_" + apiBranchSplit[3];
-
-          db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-            apiSandboxVersion,
-            3
-          ]);
-        }
-      } else {
-        console.log("CMS Response Code : " + res.statusCode + "\n");
-      }
-    }
-  });
-}
-
-function cmsSandboxDeploy() {
-  var cmsSandboxDeployDone = "*배포완료* ";
+function sandboxDeployDone(id) {
+  var doneMessage = "배포완료";
   db.get(
-    "SELECT version FROM sandboxserver WHERE id = 1",
+    "SELECT module, version FROM sandboxserver WHERE id = ?", [
+      id
+    ],
     function (err, row) {
-      console.log("*CMS* : `" + row.version + "`" + "\n");
-      cmsSandboxDeployDone +=
-        "*CMS* : `" + row.version + "`" + "\n";
-      bot.postMessageToChannel("qa_bot_test", cmsSandboxDeployDone);
+      doneMessage +=
+        "*" + row.module + "*" + "'" + row.version + "`" + "\n"
+      bot.postMessageToChannel("qa_bot_test", doneMessage);
     }
   );
 }
 
-function exidSandboxDeploy() {
-  var exidSandboxDeployDone = "*배포완료* ";
-  db.get(
-    "SELECT version FROM sandboxserver WHERE id = 2",
-    function (err, row) {
-      console.log("*EXID* : `" + row.version + "`" + "\n");
-      exidSandboxDeployDone +=
-        "*CMS* : `" + row.version + "`" + "\n";
-      bot.postMessageToChannel("qa_bot_test", exidSandboxDeployDone);
-    }
-  );
-}
-
-function apiSandboxDeploy() {
-  var apiSandboxDeployDone = "*배포완료* ";
-  db.get(
-    "SELECT version FROM sandboxserver WHERE id = 3",
-    function (err, row) {
-      console.log("*API* : `" + row.version + "`" + "\n");
-      apiSandboxDeployDone +=
-        "*API* : `" + row.version + "`" + "\n";
-      bot.postMessageToChannel("qa_bot_test", apiSandboxDeployDone);
-    }
-  );
-}
-
-function botStart() {
-  var botStartCheckList = "SANDBOX" + "\n";
+function sandboxServerList() {
+  var checkMessage = "SANDBOX" + "\n";
   db.each(
     "SELECT module, version FROM sandboxserver",
     function (err, row) {
@@ -154,6 +75,8 @@ function botStart() {
     }
   );
 }
+
+function botStart() {}
 
 var bot = new slackbots(slacktoken);
 
@@ -168,7 +91,7 @@ bot.on("message", function (data) {
     //jenkins_bot : B3SS13WEL
     //exid_bot : B44CU1B7B
     //qa_bot : B7H8GG57X
-    if (botId === "B3SS13WEL" && data.attachments) {
+    if (botId === "B7H8GG57X" && data.attachments) {
       var valueInformation = data.attachments[0].fields[0].value;
       var valueInformation = valueInformation.toUpperCase();
       var splitInformation = valueInformation.split("\n");
@@ -183,14 +106,20 @@ bot.on("message", function (data) {
           splitInformation[3].includes("SANDBOX") &&
           splitInformation[1].includes("CMS")
         ) {
-          cmsSandboxAdd();
-          cmsSandboxDeploy();
+          sandboxVersionAdd(urls.cms, 1);
+          sandboxDeployDone(1);
         } else if (
           splitInformation[3].includes("SANDBOX") &&
           splitInformation[1].includes("API")
         ) {
-          apiSandboxAdd();
-          apiSandboxDeploy();
+          sandboxVersionAdd(urls.api, 3);
+          sandboxDeployDone(3)
+        }
+      } else if (valueInformation.includes("SUCCESS") &&
+        valueInformation.includes("EXID")) {
+        if (splitInformation[1].includes("SANDBOX")) {
+          sandboxVersionAdd(urls.exidOptions, 2);
+          sandboxDeployDone(2)
         }
       } else if (
         valueInformation.includes("SUCCESSFUL") &&
