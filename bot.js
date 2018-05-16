@@ -150,7 +150,7 @@ bot.on("message", function (data) {
 
     var checkServerVersion = data.text;
     var checkServerVersion = checkServerVersion.toLowerCase();
-    if (checkServerVersion === "!sandbox") {
+    if (checkServerVersion === "!sandbox" && checkServerVersion === "!샌박") {
       sandboxServerList()
     }
   }
