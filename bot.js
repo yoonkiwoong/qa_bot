@@ -67,16 +67,20 @@ function sandboxServerList() {
   var checkMessage = "SANDBOX" + "\n";
   db.each(
     "SELECT module, version FROM sandboxserver",
-    function (err, row) {
-      botStartCheckList += row.module + " : " + row.version + "\n";
+    function (err, rows) {
+      sandboxVersionList +=
+        "*" + rows.module + "* : `" + rows.version + "`" + "\n";
     },
     function () {
-      console.log(botStartCheckList);
+      console.log(sandboxVersionList);
+      bot.postMessageToChannel("qa_bot_test", sandboxVersionList);
     }
   );
 }
 
-function botStart() {}
+bot.on("start", function () {
+  console.log("BOT START" + "\n");
+});
 
 var bot = new slackbots(slacktoken);
 
@@ -150,17 +154,7 @@ bot.on("message", function (data) {
     var checkServerVersion = data.text;
     var checkServerVersion = checkServerVersion.toLowerCase();
     if (checkServerVersion === "!sandbox") {
-      var sandboxVersionList = "*SANDBOX*" + "\n";
-      db.each(
-        "SELECT module, version FROM sandboxserver",
-        function (err, rows) {
-          sandboxVersionList +=
-            "*" + rows.module + "* : `" + rows.version + "`" + "\n";
-        },
-        function () {
-          bot.postMessageToChannel("qa_bot_test", sandboxVersionList);
-        }
-      );
+      sandboxServerList()
     }
   }
 });
