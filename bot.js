@@ -50,14 +50,14 @@ function sandboxVersionAdd(sandboxModule, id) {
 }
 
 function sandboxDeployDone(id) {
-  var doneMessage = "배포완료";
+  var doneMessage = "배포완료" + "\n";
   db.get(
     "SELECT module, version FROM sandboxserver WHERE id = ?", [
       id
     ],
     function (err, row) {
       doneMessage +=
-        "*" + row.module + "*" + "'" + row.version + "`" + "\n"
+        " *" + row.module + "* :" + " `" + row.version + "`" + "\n"
       bot.postMessageToChannel("qa_bot_test", doneMessage);
     }
   );
@@ -68,24 +68,21 @@ function sandboxServerList() {
   db.each(
     "SELECT module, version FROM sandboxserver",
     function (err, rows) {
-      sandboxVersionList +=
+      checkMessage +=
         "*" + rows.module + "* : `" + rows.version + "`" + "\n";
     },
     function () {
-      console.log(sandboxVersionList);
-      bot.postMessageToChannel("qa_bot_test", sandboxVersionList);
+      console.log(checkMessage);
+      bot.postMessageToChannel("qa_bot_test", checkMessage);
     }
   );
 }
 
-bot.on("start", function () {
-  console.log("BOT START" + "\n");
-});
-
 var bot = new slackbots(slacktoken);
 
 bot.on("start", function () {
-  botStart(console.log("BOT START" + "\n"));
+  console.log("BOT START" + "\n");
+  sandboxServerList()
 });
 
 bot.on("message", function (data) {
