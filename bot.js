@@ -164,7 +164,6 @@ bot.on("start", function () {
 bot.on("message", function (data) {
   if (data.type === "message") {
     var botId = data.bot_id;
-    console.log(data);
 
     //jenkins_bot : B3SS13WEL
     //exid_bot : B44CU1B7B
@@ -173,6 +172,7 @@ bot.on("message", function (data) {
       var valueInformation = data.attachments[0].fields[0].value;
       var valueInformation = valueInformation.toUpperCase();
       var splitInformation = valueInformation.split("\n");
+      console.log(splitInformation + "\n");
 
       if (
         valueInformation.includes("SUCCESSFUL") &&
@@ -198,6 +198,10 @@ bot.on("message", function (data) {
       ) {
         console.log("SLIDE DEPLOY SECCUESS" + "\n");
         if (splitInformation[2].includes("SANDBOX")) {
+          var splitInformation = valueInformation.split("\n");
+          console.log(deploySlideServer);
+          var slideBranchSplit = splitInformation[1].split("/");
+          console.log(slideSandboxVersion + "\n");
           var slideSandboxVersion =
             slideBranchSplit[1] + "_" + slideBranchSplit[2];
 
