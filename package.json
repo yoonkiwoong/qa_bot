@@ -2,11 +2,10 @@
   "name": "qa_bot",
   "version": "1.0.0",
   "description": "Slack Bot for QA",
-  "main": "bot.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node bot.js",
-    "dev_start": "export $(cat .config) && node index.js"
+    "start": "node index.js"
   },
   "keywords": [
     "Slack",
@@ -22,9 +21,6 @@
     "sqlite3": "^4.0.2"
   },
   "devDependencies": {},
-  "engines": {
-    "node": "10.6.0"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/yoonkiwoong/qa_bot.git"
