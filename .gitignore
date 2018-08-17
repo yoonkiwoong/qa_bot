@@ -57,8 +57,8 @@ typings/
 # Json file
 *.json
 
-# Database file
-*.db
+# But Not this Json file
+!urls.json
 
 # Database Setting file
 *_db.js
