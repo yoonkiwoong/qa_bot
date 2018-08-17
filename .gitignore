@@ -58,6 +58,7 @@ typings/
 *.json
 
 # But Not this Json file
+!package.json
 !urls.json
 
 # Database Setting file
@@ -65,7 +66,3 @@ typings/
 
 # Test file
 test_*.js
-
-# dotenv environment variables file
-.env
-
