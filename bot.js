@@ -1,4 +1,3 @@
-var slacktoken = require("./token.json");
 var urls = require("./urls.json");
 var request = require("request");
 var slackbots = require("slackbots");
@@ -79,7 +78,10 @@ function sandboxServerList() {
   );
 }
 
-var bot = new slackbots(slacktoken);
+var bot = new slackbots({
+  token: process.env.SLACK_TOKEN,
+  name: process.env.SLACK_NAME
+});
 
 bot.on("start", function () {
   console.log("BOT START" + "\n");
