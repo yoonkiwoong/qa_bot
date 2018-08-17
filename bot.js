@@ -147,11 +147,13 @@ bot.on("message", function (data) {
         }
       }
     }
-
-    var checkServerVersion = data.text;
-    var checkServerVersion = checkServerVersion.toLowerCase();
-    if (checkServerVersion === "!sandbox") {
-      sandboxServerList()
+    if (data.text) {
+      var checkServerVersion = data.text;
+      console.log(checkServerVersion);
+      var checkServerVersion = checkServerVersion.toLowerCase();
+      if (checkServerVersion === "!sandbox") {
+        sandboxServerList();
+      }
     }
   }
 });
