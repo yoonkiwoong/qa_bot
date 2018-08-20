@@ -85,6 +85,7 @@ var bot = new slackbots({
 
 bot.on("start", function () {
   console.log("BOT START" + "\n");
+  sandboxServerList();
 });
 
 bot.on("message", function (data) {
