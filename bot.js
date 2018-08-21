@@ -51,7 +51,7 @@ function sandboxVersionAdd(sandboxModule, id) {
 }
 
 function sandboxDeployDone(id) {
-  var doneMessage = "배포완료" + "\n";
+  var doneMessage = "배포완료";
   db.get(
     "SELECT module, version FROM sandboxserver WHERE id = ?",
     [id],
