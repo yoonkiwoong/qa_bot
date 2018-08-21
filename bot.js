@@ -156,9 +156,9 @@ bot.on("message", function (data) {
           }
         );
       } else if (
-        valueInformation.includes("SUCCESS") &&
         valueInformation.includes("PAGEWEB") &&
-        splitInformation[2].includes("SANDBOX")
+        valueInformation.includes("SUCCESS") &&
+        splitInformation[1].includes("SANDBOX")
       ) {
         console.log("WEB DEPLOY SUCCESS" + "\n" + "SERVER : SANDBOX" + "\n");
         var slideBranchSplit = splitInformation[2].split("/");
