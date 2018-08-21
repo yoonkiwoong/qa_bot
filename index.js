@@ -1,2 +1,2 @@
-require("./bot");
-require("./web");
+import "./bot";
+import "./web";
