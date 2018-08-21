@@ -7,7 +7,7 @@ app.get("/", function (req, res) {
     res.json({ version: packageInfo.version });
 });
 
-var server = app.listen(process.env.PORT, function () {
+var server = app.listen(process.env || 8080, function () {
     var host = server.address().address;
     var port = server.address().port;
 
