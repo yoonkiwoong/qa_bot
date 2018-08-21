@@ -62,7 +62,7 @@ typings/
 !urls.json
 
 # Database Setting file
-*_db.js
+db_*.js
 
 # Test file
 test_*.js
