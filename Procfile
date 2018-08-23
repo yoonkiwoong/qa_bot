@@ -1,2 +1,2 @@
-web: node index.js
+web: node web.js
 worker: node bot.js
