@@ -61,6 +61,9 @@ typings/
 !package.json
 !urls.json
 
+# Database file
+.db
+
 # Database Setting file
 db_*.js
 
