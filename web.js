@@ -1,13 +1,12 @@
 var express = require("express");
-var packageInfo = require("./package.json");
-
 var app = express();
 
+//rounter
 app.get("/", function (req, res) {
-    res.json({ version: packageInfo.version });
+    return res.send("Hello World");
 });
 
-var server = app.listen(process.env || 8080, function () {
+var server = app.listen(process.env.PORT || 3000 || 8080, function () {
     var host = server.address().address;
     var port = server.address().port;
 
