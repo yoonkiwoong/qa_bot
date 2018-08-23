@@ -7,8 +7,7 @@ app.get("/", function (req, res) {
 });
 
 var server = app.listen(process.env.PORT || 3000 || 8080, function () {
-    var host = server.address().address;
     var port = server.address().port;
 
-    console.log("Web server started at http://%s:%s", host, port);
+    console.log("Web server started at this PORT : %s", port);
 });

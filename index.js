@@ -1,2 +1,2 @@
-import "./bot";
 import "./web";
+import "./bot";
