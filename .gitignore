@@ -69,3 +69,6 @@ db_*.js
 
 # Test file
 test_*.js
+
+# NODE environment file
+.env

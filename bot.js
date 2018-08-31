@@ -1,68 +1,23 @@
-var urls = require("./urls.json");
-var request = require("request");
+require('dotenv').config();
+
 var slackbots = require("slackbots");
 var sqlite3 = require("sqlite3").verbose();
 
 var db = new sqlite3.Database("./sandboxversion.db");
 
-function sandboxVersionAdd(sandboxModule, id) {
-  request.get(sandboxModule, function (err, res, body) {
-    if (err) {
-      console.log("ERROR! : " + err + "\n");
-    } else {
-      if (res.statusCode == 200) {
-        var json = JSON.parse(body);
-        if (sandboxModule === urls.cms || sandboxModule === urls.api) {
-          var branch = json.git.branch;
-          if (branch.includes("QA")) {
-            var splitBranch = branch.split("/");
-            var sandboxVersion = splitBranch[2] + "_" + splitBranch[3];
-            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-              sandboxVersion,
-              id
-            ]);
-          } else {
-            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-              branch,
-              id
-            ]);
-          }
-        } else if (sandboxModule === urls.exid) {
-          var branch = json.data.git_branch;
-          if (branch.includes("QA")) {
-            var splitBranch = branch.split("/");
-            var sandboxVersion = splitBranch[1] + "_" + splitBranch[2];
-            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-              sandboxVersion,
-              id
-            ]);
-          } else {
-            db.run("UPDATE sandboxserver SET version = ? WHERE id = ?", [
-              branch,
-              id
-            ]);
-          }
-        }
-      } else {
-        console.log("Response Code : " + res.statusCode + "\n");
-      }
-    }
-  });
-}
-
-function sandboxDeployDone(id) {
-  var doneMessage = "배포완료";
-  db.get(
-    "SELECT module, version FROM sandboxserver WHERE id = ?",
-    [id],
-    function (err, row) {
-      doneMessage +=
-        " *" + row.module + "* :" + " `" + row.version + "`" + "\n";
-      console.log(doneMessage);
+function deployedServerUpdate(deployedServer, version, id) {
+  deployedServer = deployedServer.toUpperCase();
+  db.run(
+    "UPDATE sandboxserver SET version = ? WHERE id = ?",
+    [version, id],
+    function () {
+      bot.postMessageToChannel(
+        "qa_bot_test",
+        "배포완료" + "\n" + "*" + deployedServer + "* : `" + version + "`"
+      );
     }
   );
-  bot.postMessageToChannel("qa_bot_test", doneMessage);
-}
+};
 
 function sandboxServerList() {
   var checkMessage = "SANDBOX" + "\n";
@@ -88,6 +43,7 @@ bot.on("start", function () {
 });
 
 bot.on("message", function (data) {
+
   if (data.type === "message") {
     var botId = data.bot_id;
 
@@ -102,79 +58,56 @@ bot.on("message", function (data) {
 
       if (
         valueInformation.includes("SUCCESSFUL") &&
-        valueInformation.includes("NICOLAS-BUILD-DEPLOY-TEST-KRANES") &&
-        splitInformation[3].includes("SANDBOX")
+        valueInformation.includes("NICOLAS-BUILD-PUBLISH")
       ) {
-        if (splitInformation[1].includes("CMS")) {
-          console.log(
-            "NICOLAS DEPLOY SUCCESS" +
-            "\n" +
-            "SERVER : SANDBOX" +
-            "\n" +
-            "MODULE : CMS" +
-            "\n"
-          );
-          sandboxVersionAdd(urls.cms, 1);
-          const abc = sandboxDeployDone(1);
-          console.log(abc);
-        } else if (splitInformation[1].includes("API")) {
-          console.log(
-            "NICOLAS DEPLOY SUCCESS" +
-            "\n" +
-            "SERVER : SANDBOX" +
-            "\n" +
-            "MODULE : API" +
-            "\n"
-          );
-          sandboxVersionAdd(urls.api, 3);
-          sandboxDeployDone(3);
+        var nicolasBranchSplit = splitInformation[1].split("/");
+        var version = nicolasBranchSplit[2] + "_" + nicolasBranchSplit[3];
+        console.log(version);
+        if (
+          valueInformation.includes("SUCCESSFUL") &&
+          valueInformation.includes("NICOLAS-BUILD-DEPLOY-TEST-KRANES") &&
+          splitInformation[3].includes("SANDBOX")
+        ) {
+          console.log("SANDBOX NICOLAS DEPLOY SUCCESS" + "\n");
+          if (splitInformation[1].includes("CMS")) {
+            console.log("SANDBOX CMS DEPLOY SUCCESS" + "\n");
+            var deployedServer = "cms"
+            deployedServerUpdate(deployedServer, version, 1);
+          } else if (splitInformation[1].includes("API")) {
+            console.log("SANDBOX API DEPLOY SUCCESS" + "\n");
+            var deployedServer = "api"
+            deployedServerUpdate(deployedServer, version, 3);
+          }
         }
       } else if (
         valueInformation.includes("EXID_SANDBOX") &&
         valueInformation.includes("SUCCESS")
       ) {
-        sandboxVersionAdd(urls.exid, 2);
-        sandboxDeployDone(2);
+        console.log("SANDBOX EXID DEPLOY SUCCESS" + "\n");
+        var exidBranchSplit = splitInformation[2].split("/");
+        var version = exidBranchSplit[1] + "_" + exidBranchSplit[2];
+        var deployedServer = "exid"
+        deployedServerUpdate(deployedServer, version, 2);
       } else if (
         valueInformation.includes("SUCCESSFUL") &&
         valueInformation.includes("SLIDE_TEST_KRANE") &&
         splitInformation[2].includes("SANDBOX")
       ) {
-        console.log("SLIDE DEPLOY SUCCESS" + "\n" + "SERVER : SANDBOX" + "\n");
+        console.log("SANDBOX SLIDE DEPLOY SUCCESS" + "\n");
         var slideBranchSplit = splitInformation[1].split("/");
-        var slideSandboxVersion =
-          slideBranchSplit[1] + "_" + slideBranchSplit[2];
-
-        db.run(
-          "UPDATE sandboxserver SET version = ? WHERE id = ?",
-          [slideSandboxVersion, 4],
-          function () {
-            bot.postMessageToChannel(
-              "qa_bot_test",
-              "배포완료 *SLIDE* : `" + slideSandboxVersion + "`"
-            );
-          }
-        );
+        var version = slideBranchSplit[1] + "_" + slideBranchSplit[2];
+        var deployedServer = "slide"
+        deployedServerUpdate(deployedServer, version, 4)
       } else if (
         valueInformation.includes("PAGEWEB") &&
         valueInformation.includes("SUCCESS") &&
         splitInformation[1].includes("SANDBOX")
       ) {
-        console.log("WEB DEPLOY SUCCESS" + "\n" + "SERVER : SANDBOX" + "\n");
-        var slideBranchSplit = splitInformation[2].split("/");
-        var webSandboxVersion =
-          slideBranchSplit[1] + "_" + slideBranchSplit[2];
-
-        db.run(
-          "UPDATE sandboxserver SET version = ? WHERE id = ?",
-          [webSandboxVersion, 5],
-          function () {
-            bot.postMessageToChannel(
-              "qa_bot_test",
-              "배포완료 *WEB* : `" + webSandboxVersion + "`"
-            );
-          }
-        );
+        console.log("SANDBOX WEB DEPLOY SUCCESS" + "\n");
+        var webBranchSplit = splitInformation[2].split("/");
+        var version = webBranchSplit[1] + "_" + webBranchSplit[2];
+        var deployedServer = "web"
+        deployedServerUpdate(deployedServer, version, 5)
       }
     }
     if (data.text) {
